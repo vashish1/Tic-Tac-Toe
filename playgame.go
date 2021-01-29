@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 )
@@ -14,12 +15,12 @@ func Printboard() {
 		}
 		fmt.Print("|\n")
 	}
+	fmt.Println()
 }
 
 func StartGame() {
 	var turn string
 	fmt.Scanf("%s", &key)
-	fmt.Println(key)
 	if key == "X" {
 		UserPlay()
 		turn = "computer"
@@ -31,18 +32,19 @@ func StartGame() {
 		fmt.Println("Invalid Input")
 		return
 	}
-	
+
 	for turncounts < 9 {
 		Printboard()
 		var done bool
 		if turn == "player" {
-			done =UserPlay()
-			if !done{
+			done = UserPlay()
+			if !done {
 				break
 			}
 			ok := checkForWin()
 			if ok {
 				Printboard()
+				UpdateScore(turn)
 				fmt.Println("User Wins")
 				return
 			}
@@ -50,6 +52,7 @@ func StartGame() {
 			ComputerPlay()
 			ok := checkForWin()
 			if ok {
+				UpdateScore(turn)
 				Printboard()
 				fmt.Println("Computer Wins")
 				return
@@ -58,12 +61,12 @@ func StartGame() {
 		switchTurn(&turn)
 		// Printboard()
 	}
-	if turncounts==9{
-	   fmt.Println("The Game is a Draw")
+	if turncounts == 9 {
+		fmt.Println("The Game is a Draw")
 	}
 }
 
-func UserPlay() bool{
+func UserPlay() bool {
 	// fmt.Println("user playing")
 	var done = false
 	for !done {
@@ -71,9 +74,14 @@ func UserPlay() bool{
 		fmt.Scan(&move)
 		if move == "quit" {
 			fmt.Println("Computer Wins")
-			turncounts=10
+			turncounts = 10
 			return done
 		}
+		if move == "scoreboard"{
+			PrintScoreBoard()
+			fmt.Scan(&move)
+		}
+		
 		fmt.Scanf("%s", &points)
 		pos1, _ := strconv.Atoi(string(points[0]))
 		pos2, _ := strconv.Atoi(string(points[2]))
@@ -92,8 +100,9 @@ func UserPlay() bool{
 func ComputerPlay() {
 	// fmt.Println("computer playing")
 	var done = false
+	rand.Seed(time.Now().UnixNano())
 	for !done {
-		rand.Seed(time.Now().UnixNano())
+		
 		pos1 := rand.Intn(2)
 		pos2 := rand.Intn(2)
 		if gameboard[pos1][pos2] == " " {
@@ -124,8 +133,8 @@ func switchTurn(t *string) {
 func checkForWin() bool {
 	//compare key and ascii value
 	board := ParseGameBoard()
-	for i:=range board{
-		if board[i]=="XXX"||board[i]=="OOO"{
+	for i := range board {
+		if board[i] == "XXX" || board[i] == "OOO" {
 			return true
 		}
 	}
@@ -134,13 +143,43 @@ func checkForWin() bool {
 
 func ParseGameBoard() [8]string {
 	var b [8]string
-	b[0]=gameboard[0][0]+gameboard[0][1]+gameboard[0][2]
-	b[1]=gameboard[1][0]+gameboard[1][1]+gameboard[1][2]
-	b[2]=gameboard[2][0]+gameboard[2][1]+gameboard[2][2]
-	b[3]=gameboard[0][0]+gameboard[1][0]+gameboard[2][0]
-	b[4]=gameboard[0][1]+gameboard[1][1]+gameboard[2][1]
-	b[5]=gameboard[0][2]+gameboard[1][2]+gameboard[2][2]
-	b[6]=gameboard[0][0]+gameboard[1][1]+gameboard[2][2]
-	b[7]=gameboard[0][2]+gameboard[1][1]+gameboard[2][0]
+	b[0] = gameboard[0][0] + gameboard[0][1] + gameboard[0][2]
+	b[1] = gameboard[1][0] + gameboard[1][1] + gameboard[1][2]
+	b[2] = gameboard[2][0] + gameboard[2][1] + gameboard[2][2]
+	b[3] = gameboard[0][0] + gameboard[1][0] + gameboard[2][0]
+	b[4] = gameboard[0][1] + gameboard[1][1] + gameboard[2][1]
+	b[5] = gameboard[0][2] + gameboard[1][2] + gameboard[2][2]
+	b[6] = gameboard[0][0] + gameboard[1][1] + gameboard[2][2]
+	b[7] = gameboard[0][2] + gameboard[1][1] + gameboard[2][0]
 	return b
+}
+
+func UpdateScore(turn string) {
+	userScore := os.Getenv("userScore")
+	computerScore := os.Getenv("computerScore")
+	fmt.Println(userScore,computerScore)
+	if turn == "computer" {
+		  Score,_ :=strconv.Atoi(computerScore)
+		  Score++
+		  err:=os.Setenv("computerScore",strconv.Itoa(Score))
+		  if err!=nil{
+			  fmt.Println("error while updating score")
+		  }
+
+	}else{
+		Score,_ :=strconv.Atoi(userScore)
+		  Score++
+		  err:=os.Setenv("userScore",strconv.Itoa(Score))
+		  if err!=nil{
+			  fmt.Println("error while updating score")
+		  }
+	}
+
+}
+
+func PrintScoreBoard(){
+	userScore := os.Getenv("userScore")
+	computerScore := os.Getenv("computerScore")
+	fmt.Println("| Computer | User |")
+	fmt.Println("|      ",computerScore," |"," ",userScore," |")
 }
